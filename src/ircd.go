@@ -39,7 +39,7 @@ var Data *DataStore
 
 var DEBUG = true
 
-const initTimeout = 5    // disconnect connection if we don't receive anything in 5 seconds
+const INIT_TIMEOUT = 10  // disconnect connection if we don't receive anything in 5 seconds
 const pingTimeout = 5    // if they don't respond after 5 ping messages, they are disconnected
 const PING_INTERVAL = 30 // seconds between pings
 const SERVER_NAME = "irc.test.net"

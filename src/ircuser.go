@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"net"
+	"sync/atomic"
+	"time"
 )
 
 const (
@@ -29,23 +31,31 @@ type User struct {
 
 	out     chan *Message
 	readbuf *bufio.Reader
+	/* state */
+	identified int32
 }
 
 func InitUser(c net.Conn) *User {
 	readbuf := bufio.NewReader(c)
-	newUser := &User{c, "", "", "", "", 0, make(map[string]*Channel), "", make([]byte, 9), make(chan *Message), readbuf}
+	newUser := &User{c, "", "", "", "", 0, make(map[string]*Channel), "", make([]byte, 9), make(chan *Message), readbuf, 0}
 
 	go newUser.userReadThread()
 	go newUser.userWriteThread()
+
+	go newUser.pingTimer()
 
 	return newUser
 }
 
 func (u *User) userReadThread() {
 	for {
-		data, _ := u.readbuf.ReadString('\n')
+		data, err := u.readbuf.ReadString('\n')
+		if err != nil {
+			u.Disconnect()
+			return
+		}
 		if DEBUG {
-			println(data)
+
 		}
 		//if err != nil {
 		ParseRawMessage(u, data)
@@ -62,7 +72,8 @@ func (u *User) userWriteThread() {
 		case MSG_RAW:
 			_, err := u.conn.Write([]byte(msg.msgStr)) // don't care about return value
 			if err != nil {
-				//u.Disconnect()
+				u.Disconnect()
+				return
 			}
 			//case MSG_NOTIFY:
 			//    _, err := u.conn.Write([]byte(MessageToRawString(u, msg))) // don't care about return value
@@ -77,14 +88,13 @@ func (u *User) Send(data *Message) {
 
 /* Handle user login routine */
 func (u *User) Login(userName string, realName string) {
-	var located *User
+	/* var located *User
 	foundUser := make(chan *User)
 
 	Data.getUser(u, foundUser)
-	located = <-foundUser
+	located = <-foundUser */
 	/* If they are not logged in, then log them in */
-	if located == nil {
-
+	if u.identified == 0 {
 		u.username = userName
 		u.realname = realName
 
@@ -96,11 +106,19 @@ func (u *User) Login(userName string, realName string) {
 		}
 		/* Let user know he/she is added */
 		u.Send(&Message{MSG_RAW, (":" + SERVER_NAME + " NOTICE * :*** LOGGED IN")})
+
+		atomic.CompareAndSwapInt32(&u.identified, 0, 1)
 	} else {
 		// **TODO** user already exists 
 	}
 }
-
+func (u *User) pingTimer() {
+	time.Sleep(INIT_TIMEOUT * time.Second)
+	/* If they are not identified by now, then kill connection */
+	if u.identified == 0 {
+		u.Disconnect()
+	}
+}
 func (u *User) ChangeNick(newNick string) {
 	u.nick = newNick
 	// make an announcement in all channels user is connected to
@@ -112,6 +130,5 @@ func (u *User) ChangeNick(newNick string) {
 
 func (u *User) Disconnect() {
 	// Manually call userWriteThread to ensure final messages are written out
-
 	u.conn.Close()
 }

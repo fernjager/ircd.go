@@ -38,13 +38,18 @@ func (data *DataStore) dataThread() {
 		/* Read user */
 		case READ_USER:
 			request.userWriteBack <- data.users[request.user.nick]
-		/* Write */
+		/* Write user */
 		case WRITE_USER:
 			data.users[request.user.nick] = request.user
+		/* Read channel */
+		case READ_CHANNEL:
+			request.chanWriteBack <- data.channels[request.channel.name]
+		/* Write channel */
+		case WRITE_CHANNEL:
+			data.channels[request.channel.name] = request.channel
 		}
 	}
 }
-
 func (data *DataStore) getUser(user *User, writeBack (chan *User)) {
 	data.requests <- &DataRequest{READ_USER, user, writeBack, nil, nil}
 }
