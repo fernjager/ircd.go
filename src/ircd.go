@@ -37,8 +37,12 @@ $("#postToGoHandler").submit(function(event) {
 var Conf *Config
 var Data *DataStore
 
-const initTimeout = 5 // disconnect connection if we don't receive anything in 5 seconds
-const pingTimeout = 5 // if they don't respond after 5 ping messages, they are disconnected
+var DEBUG = true
+
+const initTimeout = 5    // disconnect connection if we don't receive anything in 5 seconds
+const pingTimeout = 5    // if they don't respond after 5 ping messages, they are disconnected
+const PING_INTERVAL = 30 // seconds between pings
+const SERVER_NAME = "irc.test.net"
 
 func home(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "{\"leads\":\"1\",\"success\":true}")
@@ -94,6 +98,7 @@ func startIRCd() {
 			// handle error
 			continue
 		}
+		print("connection from " + conn.RemoteAddr().String())
 		go handleConnection(conn)
 	}
 }
