@@ -15,41 +15,62 @@ type User struct{
     realname string
     usermode int8
     
+    /* channels */
+    channels map[string] *Channel
+
     /* Statistics */
     lastseen string
     modes []byte
 
-    in chan *Message
     out chan *Message
     readbuf *bufio.Reader
 }
 
 func InitUser( c net.Conn ) *User{
     readbuf := bufio.NewReader(c)
-    newUser := &User{ c, "", "", "", "", 0, "",  make([]byte, 9), make( chan *Message ), make( chan *Message ), readbuf }
+    newUser := &User{ c, "", "", "", "", 0, make(map[string] *Channel), "",  make([]byte, 9), make( chan *Message ), readbuf }
 
     go newUser.userReadThread();
     go newUser.userWriteThread();
+
     return newUser
 }
 
 func(u *User) userReadThread(){
     for {
         data, _ := u.readbuf.ReadString('\n')
-        u.in <- ParseRawMessage( data )
+        ParseRawMessage( u, data )
     }
 }
+
 func(u *User) userWriteThread(){
     for msg := range u.out {
-        u.conn.Write( []byte(msg.msgStr)) // don't care about return value
+        u.conn.Write( []byte(MessageToRawString(u,msg))) // don't care about return value
     }
 }
 
 func(u *User) Send( data *Message ) {
     u.out <- data
 }
-func(u *User) Receive() *Message {
-    return <- u.in
+
+/* Handle user login routine */
+func(u *User) Login( userName string, realName string ){
+    /* If username and realname is not set, then log them in */
+    if u.username == "" && u.realname == "" {
+        u.username = userName
+        u.realname = realName
+
+        /* Add to global datastore */
+        Data.putUser( u.username, u )
+    }
+}
+
+func(u *User) ChangeNick( newNick string ){
+    u.nick = newNick
+    // make an announcement in all channels user is connected to
+    if u.username=="" && u.realname==""{
+
+    }
 }
 
 func(u *User) Disconnect(){

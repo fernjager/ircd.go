@@ -8,7 +8,7 @@ import (
     "net/http"
     "strings"
     "net"
-    "time"
+    //"time"
 )
 
 
@@ -34,6 +34,11 @@ $("#postToGoHandler").submit(function(event) {
 </script>
 </body>
 </html>`
+var Conf *Config
+var Data *DataStore
+
+const initTimeout = 5 // disconnect connection if we don't receive anything in 5 seconds
+const pingTimeout = 5 // if they don't respond after 5 ping messages, they are disconnected
 
 func home(w http.ResponseWriter, r *http.Request) {
     fmt.Fprint(w, "{\"leads\":\"1\",\"success\":true}")
@@ -55,16 +60,7 @@ func target(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func handleConnection( c net.Conn ){
-        user := InitUser(c)
-        
-        daytime := time.Now().String()
-        msg := user.Receive()
-        //&Message{ "PRIVMSG", daytime }
-        user.Send( msg )
 
-        //user.Disconnect();
-}
 
 func startWeb(){
     http.HandleFunc("/", home)
@@ -80,6 +76,16 @@ func startWeb(){
 func startLinks(){
 
 }
+
+func handleConnection( c net.Conn ){
+        InitUser(c)
+        
+        // Now get NICK
+        //daytime := time.Now().String()
+
+        //user.Disconnect();
+}
+
 func startIRCd(){
     ln, err := net.Listen( "tcp", ":6667" )
     if err != nil {
@@ -96,9 +102,11 @@ func startIRCd(){
 }
 
 func main() {
-    go startWeb();
-    go startLinks();
-    startIRCd();
+    Conf = ConfigInit()
+    Data = DataStoreInit()
+    go startWeb()
+    go startLinks()
+    startIRCd()
 }
 
 
