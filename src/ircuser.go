@@ -1,80 +1,86 @@
 package main
 
 import (
-    "net"
-    "bufio"
-    );
+	"bufio"
+	"net"
+)
 
 // User objects
-type User struct{
-    conn net.Conn
+type User struct {
+	conn net.Conn
 
-    address string
-    nick string
-    username string
-    realname string
-    usermode int8
-    
-    /* channels */
-    channels map[string] *Channel
+	address  string
+	nick     string
+	username string
+	realname string
+	usermode int8
 
-    /* Statistics */
-    lastseen string
-    modes []byte
+	/* channels */
+	channels map[string]*Channel
 
-    out chan *Message
-    readbuf *bufio.Reader
+	/* Statistics */
+	lastseen string
+	modes    []byte
+
+	out     chan *Message
+	readbuf *bufio.Reader
 }
 
-func InitUser( c net.Conn ) *User{
-    readbuf := bufio.NewReader(c)
-    newUser := &User{ c, "", "", "", "", 0, make(map[string] *Channel), "",  make([]byte, 9), make( chan *Message ), readbuf }
+func InitUser(c net.Conn) *User {
+	readbuf := bufio.NewReader(c)
+	newUser := &User{c, "", "", "", "", 0, make(map[string]*Channel), "", make([]byte, 9), make(chan *Message), readbuf}
 
-    go newUser.userReadThread();
-    go newUser.userWriteThread();
+	go newUser.userReadThread()
+	go newUser.userWriteThread()
 
-    return newUser
+	return newUser
 }
 
-func(u *User) userReadThread(){
-    for {
-        data, _ := u.readbuf.ReadString('\n')
-        ParseRawMessage( u, data )
-    }
+func (u *User) userReadThread() {
+	for {
+		data, err := u.readbuf.ReadString('\n')
+		if err != nil {
+			ParseRawMessage(u, data)
+		} else {
+			Data.RemoveUser(u.nick)
+			u.Disconnect()
+		}
+	}
 }
 
-func(u *User) userWriteThread(){
-    for msg := range u.out {
-        u.conn.Write( []byte(MessageToRawString(u,msg))) // don't care about return value
-    }
+func (u *User) userWriteThread() {
+	for msg := range u.out {
+		u.conn.Write([]byte(MessageToRawString(u, msg))) // don't care about return value
+	}
 }
 
-func(u *User) Send( data *Message ) {
-    u.out <- data
+func (u *User) Send(data *Message) {
+	u.out <- data
 }
 
 /* Handle user login routine */
-func(u *User) Login( userName string, realName string ){
-    /* If username and realname is not set, then log them in */
-    if u.username == "" && u.realname == "" {
-        u.username = userName
-        u.realname = realName
+func (u *User) Login(userName string, realName string) {
+	/* If username and realname is not set, then log them in */
+	if u.username == "" && u.realname == "" {
+		u.username = userName
+		u.realname = realName
 
-        /* Add to global datastore */
-        Data.putUser( u.username, u )
-    }
+		/* Add to global datastore */
+		Data.putUser(u.username, u)
+	}
 }
 
-func(u *User) ChangeNick( newNick string ){
-    u.nick = newNick
-    // make an announcement in all channels user is connected to
-    if u.username=="" && u.realname==""{
+func (u *User) ChangeNick(newNick string) {
+	u.nick = newNick
+	// make an announcement in all channels user is connected to
+	// if they are in the datastore
+	if Data.getUser(newNick) != nil {
 
-    }
+	}
 }
 
-func(u *User) Disconnect(){
-    // Manually call userWriteThread to ensure final messages are written out
+func (u *User) Disconnect() {
+	// Manually call userWriteThread to ensure final messages are written out
 
-    u.conn.Close()
+	u.conn.Close()
 }
