@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	//"time"
 )
 
 const homePage = `<!DOCTYPE html>
@@ -39,9 +38,9 @@ var Data *DataStore
 
 var DEBUG = true
 
-const INIT_TIMEOUT = 10  // disconnect connection if we don't receive anything in 5 seconds
-const pingTimeout = 5    // if they don't respond after 5 ping messages, they are disconnected
-const PING_INTERVAL = 30 // seconds between pings
+const INIT_TIMEOUT = 10  // disconnect connection if we don't receive anything in 10 seconds, used to prevent mass connections
+const PING_TIMEOUT = 60    // If they don't respond to a ping within 60 seconds, then they have timed out
+const PING_INTERVAL = 5 // seconds between pings
 const SERVER_NAME = "irc.test.net"
 
 func home(w http.ResponseWriter, r *http.Request) {
@@ -86,12 +85,33 @@ func handleConnection(c net.Conn) {
 
 	//user.Disconnect();
 }
+/* These two threads send out pings to all clients */
+/*func pingThread(){
+    userList := make( chan *User)
+    print("chan created")
+    for {
+        time.Sleep(1 * time.Second)
+        // for all users send pings
+        
+        Data.getUsers( userList )
+        print("got users: " )
+        select{
+            case user,ok := <- userList:
+            if(ok){
+                print("ping" + user.nick)
+                user.Ping()
+            }
+        }
+    }
+}
+*/
 
 func startIRCd() {
 	ln, err := net.Listen("tcp", ":6667")
 	if err != nil {
 		// handle error
 	}
+
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
@@ -108,5 +128,6 @@ func main() {
 	Data = DataStoreInit()
 	go startWeb()
 	go startLinks()
+    //go pingThread();
 	startIRCd()
 }
