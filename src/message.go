@@ -1,9 +1,9 @@
 package main
 
 import (
+	"strconv"
 	"strings"
 	"sync/atomic"
-	"strconv"
 )
 
 type Message struct {
@@ -15,17 +15,25 @@ func ParseRawMessage(user *User, rawString string) *Message {
 	parts := strings.Split(strings.Trim(rawString, "\n\r "), " ")
 
 	//if( len(parts) < 1 )
+	// Determine command format i.e. :command or command
+	var command string
+	commandString := strings.ToUpper(parts[0])
 
-	command := strings.ToUpper(parts[0])
+	if commandString[0] != ':' {
+		command = commandString
+	} else {
+		command = commandString[1:]
+	}
+
 	switch command {
 	case "NICK":
 		user.ChangeNick(parts[1])
 	case "USER":
 		user.Login(parts[1], strings.Join(parts[4:], " ")[1:])
 	case "PONG":
-		pong_num,err := strconv.Atoi(parts[1][1:])
+		pong_num, err := strconv.Atoi(parts[1][1:])
 		if err == nil && int32(pong_num) == atomic.LoadInt32(&user.ping_num) {
-			// reset user lagtime
+			// Client must respond to proper pings in order to reset user lagtime
 			atomic.StoreInt32(&user.lagtime, 0)
 		}
 		//default:

@@ -7,7 +7,7 @@ const (
 	READ_CHANNEL  = 2
 	WRITE_CHANNEL = 3
 
-    ALL_USERS = 4
+	ALL_USERS = 4
 )
 
 //users := make( map[string](*Users) )
@@ -26,7 +26,7 @@ type DataRequest struct {
 	channel       *Channel
 	chanWriteBack chan *Channel
 
-    users         chan *User
+	users chan *User
 }
 
 func DataStoreInit() *DataStore {
@@ -41,32 +41,32 @@ func (data *DataStore) dataThread() {
 		switch request.requestType {
 		/* Read user */
 		case READ_USER:
-			select{
-				case request.userWriteBack <- data.users[request.user.nick]:
-				default:
-					continue
+			select {
+			case request.userWriteBack <- data.users[request.user.nick]:
+			default:
+				continue
 			}
 		/* Write user */
 		case WRITE_USER:
 			data.users[request.user.nick] = request.user
 		/* Read channel */
 		case READ_CHANNEL:
-			select{
-				case request.chanWriteBack <- data.channels[request.channel.name]:
-				default:
-					continue
+			select {
+			case request.chanWriteBack <- data.channels[request.channel.name]:
+			default:
+				continue
 			}
 		/* Write channel */
 		case WRITE_CHANNEL:
 			data.channels[request.channel.name] = request.channel
-        /* All users */
-        case ALL_USERS:
-            for _,user := range data.users{
-            	select{
-            		case request.users <- user:
-            			println("added user " + user.nick + "to list2")
-            	}
-            }
+		/* All users */
+		case ALL_USERS:
+			for _, user := range data.users {
+				select {
+				case request.users <- user:
+					println("added user " + user.nick + "to list2")
+				}
+			}
 		}
 	}
 }
@@ -75,7 +75,7 @@ func (data *DataStore) getUser(user *User, writeBack (chan *User)) {
 }
 
 func (data *DataStore) getUsers(writeBack (chan *User)) {
-    data.requests <- &DataRequest{ALL_USERS, nil, nil, nil, nil, writeBack}
+	data.requests <- &DataRequest{ALL_USERS, nil, nil, nil, nil, writeBack}
 }
 
 func (data *DataStore) putUser(user *User) {
