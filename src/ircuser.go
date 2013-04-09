@@ -36,7 +36,7 @@ type User struct {
 	readbuf *bufio.Reader
 	/* state */
 	connected  int32
-	identified int32
+	registered int32
 	lagtime    int32
 	ping_num   int32
 }
@@ -116,7 +116,7 @@ func (u *User) Login(userName string, realName string) {
 	located = <-foundUser */
 	print("Login")
 	/* If they are not logged in, then log them in */
-	if atomic.LoadInt32(&u.identified) == 0 {
+	if atomic.LoadInt32(&u.registered) == 0 {
 		u.username = userName
 		u.realname = realName
 
@@ -125,15 +125,15 @@ func (u *User) Login(userName string, realName string) {
 
 		/* Let user know he/she is added */
 		u.Send(&Message{MSG_RAW, (":" + SERVER_NAME + " NOTICE * :*** LOGGED IN\n")})
-		atomic.StoreInt32(&u.identified, 1)
+		atomic.StoreInt32(&u.registered, 1)
 	} else {
 		// **TODO** user already exists 
 	}
 }
 func (u *User) pingTimer() {
 	time.Sleep(INIT_TIMEOUT * time.Second)
-	/* If they are not identified by now, then kill connection */
-	if atomic.LoadInt32(&u.identified) == 0 {
+	/* If they are not registered by now, then kill connection */
+	if atomic.LoadInt32(&u.registered) == 0 {
 		u.Disconnect()
 		return
 	}

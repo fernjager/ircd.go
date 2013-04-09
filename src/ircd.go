@@ -42,6 +42,7 @@ const INIT_TIMEOUT = 10  // disconnect connection if we don't receive anything i
 const PING_TIMEOUT = 60  // If they haven't done anything AND don't respond to a ping within 60 seconds, then they have timed out
 const PING_INTERVAL = 30 // seconds between pings
 const SERVER_NAME = "irc.test.net"
+const SERVER_PASS = "asdf"
 
 func home(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "{\"leads\":\"1\",\"success\":true}")
@@ -64,7 +65,11 @@ func target(w http.ResponseWriter, r *http.Request) {
 
 func startWeb() {
 	http.HandleFunc("/", home)
-	http.HandleFunc("/target", target)
+	http.HandleFunc("/api", target)
+	// login user , poll for messages.// webRTC
+
+	http.HandleFunc("/admin", target)
+	// set motd, admin users,, get stats
 
 	err := http.ListenAndServe(":8081", nil)
 	if err != nil {
@@ -73,6 +78,9 @@ func startWeb() {
 
 }
 
+/**
+ * Link to other servers 
+ */
 func startLinks() {
 
 }

@@ -26,6 +26,8 @@ func ParseRawMessage(user *User, rawString string) *Message {
 		}
 
 		switch command {
+		//case "PASS":
+
 		case "NICK":
 			user.ChangeNick(parts[1])
 		case "USER":
@@ -36,6 +38,7 @@ func ParseRawMessage(user *User, rawString string) *Message {
 				// Client must respond to proper pings in order to reset user lagtime
 				atomic.StoreInt32(&user.lagtime, 0)
 			}
+
 			//default:
 
 		}
