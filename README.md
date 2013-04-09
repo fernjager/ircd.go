@@ -11,3 +11,6 @@ The purpose of the project is twofold:
  
 The end goal is to create an easily deployed IRCd requiring minimal configuration.
 
+## Progress
+- Command Implementation:
+
