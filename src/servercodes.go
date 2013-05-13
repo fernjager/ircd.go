@@ -1032,5 +1032,5 @@ const RPL_STATSBLINE = 247
 const ERR_NOSERVICEHOST = 492
 
 var codemap = map[int]string{
-	RPL_WELCOME: "Welcome to the Internet Relay Network <nick>!<user>@<host>",
+    RPL_WELCOME: "Welcome to the Internet Relay Network <nick>!<user>@<host>",
 }

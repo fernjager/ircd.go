@@ -1,13 +1,13 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net"
-	"net/http"
-	"strings"
+    "encoding/json"
+    "fmt"
+    "io/ioutil"
+    "log"
+    "net"
+    "net/http"
+    "strings"
 )
 
 const homePage = `<!DOCTYPE html>
@@ -45,53 +45,53 @@ const SERVER_NAME = "irc.test.net"
 const SERVER_PASS = "asdf"
 
 func home(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "{\"leads\":\"1\",\"success\":true}")
+    fmt.Fprint(w, "{\"leads\":\"1\",\"success\":true}")
 }
 
 func target(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	if body, err := ioutil.ReadAll(r.Body); err != nil {
-		fmt.Fprintf(w, "Couldn't read request body: %s", err)
-	} else {
-		dec := json.NewDecoder(strings.NewReader(string(body)))
-		var m Message
-		if err := dec.Decode(&m); err != nil {
-			fmt.Fprintf(w, "Couldn't decode JSON: %s", err)
-		} else {
+    defer r.Body.Close()
+    if body, err := ioutil.ReadAll(r.Body); err != nil {
+        fmt.Fprintf(w, "Couldn't read request body: %s", err)
+    } else {
+        dec := json.NewDecoder(strings.NewReader(string(body)))
+        var m Message
+        if err := dec.Decode(&m); err != nil {
+            fmt.Fprintf(w, "Couldn't decode JSON: %s", err)
+        } else {
 
-		}
-	}
+        }
+    }
 }
 
 func startWeb() {
-	http.HandleFunc("/", home)
-	http.HandleFunc("/api", target)
-	// login user , poll for messages.// webRTC
+    http.HandleFunc("/", home)
+    http.HandleFunc("/api", target)
+    // login user , poll for messages.// webRTC
 
-	http.HandleFunc("/admin", target)
-	// set motd, admin users,, get stats
+    http.HandleFunc("/admin", target)
+    // set motd, admin users,, get stats
 
-	err := http.ListenAndServe(":8081", nil)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
+    err := http.ListenAndServe(":8081", nil)
+    if err != nil {
+        log.Fatal("ListenAndServe: ", err)
+    }
 
 }
 
 /**
- * Link to other servers 
+ * Link to other servers
  */
 func startLinks() {
 
 }
 
 func handleConnection(c net.Conn) {
-	InitUser(c)
+    InitUser(c)
 
-	// Now get NICK
-	//daytime := time.Now().String()
+    // Now get NICK
+    //daytime := time.Now().String()
 
-	//user.Disconnect();
+    //user.Disconnect();
 }
 
 /* These two threads send out pings to all clients */
@@ -116,27 +116,27 @@ func handleConnection(c net.Conn) {
 */
 
 func startIRCd() {
-	ln, err := net.Listen("tcp", ":6667")
-	if err != nil {
-		// handle error
-	}
+    ln, err := net.Listen("tcp", ":6667")
+    if err != nil {
+        // handle error
+    }
 
-	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			// handle error
-			continue
-		}
-		print("connection from " + conn.RemoteAddr().String())
-		go handleConnection(conn)
-	}
+    for {
+        conn, err := ln.Accept()
+        if err != nil {
+            // handle error
+            continue
+        }
+        print("connection from " + conn.RemoteAddr().String())
+        go handleConnection(conn)
+    }
 }
 
 func main() {
-	Conf = ConfigInit()
-	Data = DataStoreInit()
-	go startWeb()
-	go startLinks()
-	//go pingThread();
-	startIRCd()
+    Conf = ConfigInit()
+    Data = DataStoreInit()
+    go startWeb()
+    go startLinks()
+    //go pingThread();
+    startIRCd()
 }

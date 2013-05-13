@@ -1,7 +1,7 @@
 package main
 
 type Mode struct {
-	modeStr string
+    modeStr string
 }
 
 // Lots of functions to determine mode
